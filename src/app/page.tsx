@@ -1,113 +1,617 @@
-import Image from "next/image";
+/* eslint-disable react-hooks/exhaustive-deps */
+"use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+// import uuid4 from "uuid4";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+const TAttribute = z.object({
+  label: z.string().min(1),
+  type: z.string().min(1),
+  values: z.array(z.string().min(1)).min(1),
+});
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+const TDiscount = z.object({
+  discountType: z.string().or(z.literal("fixed")).or(z.literal("percentage")),
+  value: z.number().min(0),
+});
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+const TVariation = z.object({
+  image: z.string().min(1),
+  price: z.number().min(0),
+  discount: TDiscount,
+  attribute: TAttribute,
+});
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+const schema = z.object({
+  haveVariations: z.boolean().default(false),
+  attributes: z.array(TAttribute),
+  variations: z.array(TVariation),
+  discount: TDiscount,
+});
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+const variationTemplate = [
+  {
+    image: "",
+    price: 0,
+    discount: {
+      discountType: "fixed",
+      value: 0,
+    },
+    attribute: {
+      label: "",
+      type: "",
+      values: [],
+    },
+  },
+];
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+const Home = () => {
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      haveVariations: false,
+      attributes: [],
+      variations: [],
+      discount: {
+        discountType: "fixed",
+        value: 0,
+      },
+    },
+  });
+  const [variations, setVariations] = useState(
+    form.getValues("variations") || []
   );
-}
+  const [attributes, setAttributes] = useState(
+    form.getValues("attributes") || []
+  );
+
+  useEffect(() => {
+    if (form.watch("haveVariations") === true) {
+      form.setValue("variations", variationTemplate);
+      setVariations(variationTemplate);
+    }
+  }, [form.watch("haveVariations")]);
+
+  useEffect(() => {
+    if (form.getValues("variations").length) {
+      setVariations(form.getValues("variations"));
+    }
+  }, [form.watch("variations")]);
+
+  useEffect(() => {
+    if (form.getValues("attributes").length) {
+      setAttributes(form.getValues("attributes"));
+    }
+  }, [form.watch("attributes")]);
+
+  function onSubmit(data: z.infer<typeof schema>) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
+  }
+  console.log(form.getValues(), variations);
+  return (
+    <div className="max-w-[600px] mx-auto section">
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 border p-4 shadow-2xl"
+        >
+          <FormField
+            control={form.control}
+            // @ts-ignore
+            name={`discount.discountType`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discount Type</FormLabel>
+                <Select
+                  onValueChange={(value: any) => {
+                    form.setValue(
+                      // @ts-ignore
+                      `discount.discountType`,
+                      value
+                    );
+                  }}
+                  // @ts-ignore
+                  defaultValue={form.getValues(
+                    // @ts-ignore
+                    `discount.discountType`
+                  )}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed">Fixed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            // @ts-ignore
+            name={`discount.value`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Image"
+                    type="number"
+                    // @ts-ignore
+                    value={form.getValues(
+                      // @ts-ignore
+                      `discount.value`
+                    )}
+                    onChange={(e: any) => {
+                      form.setValue(
+                        // @ts-ignore
+                        `discount.value`,
+                        parseInt(e.target.value)
+                      );
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* attributes */}
+          <div className="space-y-4">
+            {attributes.length
+              ? attributes.map((attribute, index) => {
+                  return (
+                    <fieldset key={index} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`attributes[${index}].label`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Attribute label</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Image"
+                                type="number"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `attributes[${index}].label`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `attributes[${index}].label`,
+                                    e.target.value
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`attributes[${index}].type`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Attribute Types</FormLabel>
+                            <FormControl>
+                              <Input
+                                // placeholder="Image"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `attributes[${index}].type`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `attributes[${index}].type`,
+                                    e.target.value
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`attributes[${index}].values`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Attribute Values</FormLabel>
+                            <FormControl>
+                              <Input
+                                // @ts-ignore
+                                value={form
+                                  .getValues(
+                                    // @ts-ignore
+                                    `attributes[${index}].values`
+                                  )
+                                  ?.toString()}
+                                onChange={(e: any) => {
+                                  let attributeValues =
+                                    e.target.value.split(",");
+                                  if (attributeValues) {
+                                    attributeValues = attributeValues.map(
+                                      (value: string) => value.trim()
+                                    );
+                                  }
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `attributes[${index}].values`,
+                                    attributeValues
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div
+                        onClick={() => {
+                          const prevValues = form.getValues("attributes");
+                          const toSet = prevValues.filter(
+                            (value: any, i: number) => i !== index
+                          );
+                          // console.log(prevValues, toSet);
+                          // @ts-ignore
+                          form.setValue("attributes", toSet);
+                          // @ts-ignore
+                          setAttributes(toSet);
+                        }}
+                      >
+                        Remove
+                      </div>
+                    </fieldset>
+                  );
+                })
+              : null}
+            <div
+              onClick={() => {
+                const prevValues = form.getValues("attributes");
+                const toSet = [
+                  ...prevValues,
+                  { label: "", type: "", values: [] },
+                ];
+                console.log(prevValues, toSet);
+                // @ts-ignore
+                form.setValue("attributes", toSet);
+                // @ts-ignore
+                setAttributes(toSet);
+              }}
+              role="button"
+            >
+              Add New Attribute
+            </div>
+          </div>
+          <FormField
+            control={form.control}
+            name="haveVariations"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>I have variable for this product</FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* variations  */}
+          <div className="space-y-4">
+            {variations.length
+              ? variations?.map((variation, index: number) => {
+                  return (
+                    <fieldset
+                      key={index}
+                      className="border bg-muted p-4 space-y-4"
+                    >
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].image`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Product Image</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Image"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `variations[${index}].image`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `variations[${index}].image`,
+                                    e.target.value
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].price`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Image"
+                                type="number"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `variations[${index}].price`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `variations[${index}].price`,
+                                    parseInt(e.target.value)
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].discount.discountType`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Discount Type</FormLabel>
+                            <Select
+                              onValueChange={(value: any) => {
+                                form.setValue(
+                                  // @ts-ignore
+                                  `variations[${index}].discount.discountType`,
+                                  value
+                                );
+                              }}
+                              // @ts-ignore
+                              defaultValue={form.getValues(
+                                // @ts-ignore
+                                `variations[${index}].discount.discountType`
+                              )}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="percentage">
+                                  Percentage
+                                </SelectItem>
+                                <SelectItem value="fixed">Fixed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].discount.value`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Image"
+                                type="number"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `variations[${index}].discount.value`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `variations[${index}].discount.value`,
+                                    parseInt(e.target.value)
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="space-y-4 bg-white shadow-md p-4">
+                        <FormField
+                          control={form.control}
+                          // @ts-ignore
+                          name={`variations[${index}].attribute.label`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attribute label</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Image"
+                                  type="number"
+                                  // @ts-ignore
+                                  value={form.getValues(
+                                    // @ts-ignore
+                                    `variations[${index}].attribute.label`
+                                  )}
+                                  onChange={(e: any) => {
+                                    form.setValue(
+                                      // @ts-ignore
+                                      `variations[${index}].attribute.label`,
+                                      e.target.value
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          // @ts-ignore
+                          name={`variations[${index}].attribute.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attribute Types</FormLabel>
+                              <FormControl>
+                                <Input
+                                  // placeholder="Image"
+                                  // @ts-ignore
+                                  value={form.getValues(
+                                    // @ts-ignore
+                                    `variations[${index}].attribute.type`
+                                  )}
+                                  onChange={(e: any) => {
+                                    form.setValue(
+                                      // @ts-ignore
+                                      `variations[${index}].attribute.type`,
+                                      e.target.value
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          // @ts-ignore
+                          name={`variations[${index}].attribute.values`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attribute Values</FormLabel>
+                              <FormControl>
+                                <Input
+                                  // @ts-ignore
+                                  value={form
+                                    .getValues(
+                                      // @ts-ignore
+                                      `variations[${index}].attribute.values`
+                                    )
+                                    ?.toString()}
+                                  onChange={(e: any) => {
+                                    let attributeValues =
+                                      e.target.value.split(",");
+                                    if (attributeValues) {
+                                      attributeValues = attributeValues.map(
+                                        (value: string) => value.trim()
+                                      );
+                                    }
+                                    form.setValue(
+                                      // @ts-ignore
+                                      `variations[${index}].attribute.values`,
+                                      attributeValues
+                                    );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div
+                        onClick={() => {
+                          const prevValues = form.getValues("variations");
+                          const toSet = prevValues.filter(
+                            (value: any, i: number) => i !== index
+                          );
+                          // console.log(prevValues, toSet);
+                          // @ts-ignore
+                          form.setValue("variations", toSet);
+                          // @ts-ignore
+                          setVariations(toSet);
+                        }}
+                      >
+                        Remove
+                      </div>
+                    </fieldset>
+                  );
+                })
+              : null}
+            {variations.length ? (
+              <div
+                onClick={() => {
+                  const prevValues = form.getValues("variations");
+                  const toSet = [...prevValues, ...variationTemplate];
+                  console.log(prevValues, toSet);
+                  // @ts-ignore
+                  form.setValue("variations", toSet);
+                  // @ts-ignore
+                  setVariations(toSet);
+                }}
+                role="button"
+              >
+                Add New Variant
+              </div>
+            ) : null}
+          </div>
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form>
+    </div>
+  );
+};
+
+export default Home;
