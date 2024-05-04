@@ -24,7 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import AttributeValues from "@/components/molecules/attributes";
+import AttributeValues from "@/components/molecules/attributes-values";
+import AttributesArray from "@/components/molecules/attributes-array";
+import BundlePriceList from "@/components/molecules/bundle-price-list";
 
 const TAttributes = z.object({
   label: z.string().min(1),
@@ -37,6 +39,17 @@ const TAttribute = z.object({
   value: z.string().min(1),
 });
 
+const TMetadata = z.object({
+  title: z.string(),
+  description: z.string(),
+});
+
+const TPriceListItem = z.object({
+  min_quantity: z.number().min(1),
+  max_quantity: z.number().min(2),
+  price: z.number().min(1),
+});
+
 const TDiscount = z.object({
   discountType: z.string().or(z.literal("fixed")).or(z.literal("percentage")),
   value: z.number().min(0),
@@ -47,13 +60,34 @@ const TVariation = z.object({
   price: z.number().min(0),
   discount: TDiscount,
   attributes: z.array(TAttribute),
+  stock: z.number().min(1),
 });
 
 const schema = z.object({
+  // name: z.string().min(1),
+  // slug: z.string().min(1),
+  // description: z.string().min(1),
+  // shortDescription: z.string().min(1),
+  // category: z.string().min(1),
+
+  // price: z.number().min(1),
+  // priceType: z.string().min(1),
+  // min_quantity: z.number().min(1),
+  // max_quantity: z.number().min(1),
+  bundle_price_list: z.array(TPriceListItem),
+
+  thumbnail: z.string().min(1),
+  images: z.array(z.string()),
+
   haveVariations: z.boolean().default(false),
   attributes: TAttributes,
   variations: z.array(TVariation),
   discount: TDiscount,
+
+  // stock: z.number().min(1),
+  // tags: z.array(z.string()),
+  // salesTag: z.array(z.string()),
+  // metadata: TMetadata,
 });
 
 const variationTemplate = [
@@ -65,6 +99,8 @@ const variationTemplate = [
       value: 0,
     },
     attributes: [],
+    bundle_price_list: [],
+    stock: 1,
   },
 ];
 
@@ -83,14 +119,12 @@ const Home = () => {
         discountType: "fixed",
         value: 0,
       },
+      bundle_price_list: [],
     },
   });
   const [variations, setVariations] = useState(
     form.getValues("variations") || []
   );
-  // const [attributes, setAttributes] = useState(
-  //   form.getValues("attributes") || []
-  // );
 
   useEffect(() => {
     if (form.watch("haveVariations") === true) {
@@ -104,12 +138,6 @@ const Home = () => {
       setVariations(form.getValues("variations"));
     }
   }, [form.watch("variations")]);
-
-  // useEffect(() => {
-  //   if (form.getValues("variationsattributes").length) {
-  //     setAttributes(form.getValues("attributes"));
-  //   }
-  // }, [form.watch("attributes")]);
 
   function onSubmit(data: z.infer<typeof schema>) {
     toast({
@@ -194,8 +222,10 @@ const Home = () => {
             )}
           />
 
+          <BundlePriceList form={form}/>
+
           {/* attributes */}
-          
+
           <fieldset className="space-y-4 p-4 border shadow-lg rounded-lg">
             <FormField
               control={form.control}
@@ -255,7 +285,7 @@ const Home = () => {
                 </FormItem>
               )}
             />
-            <AttributeValues form={form} defaultValues={["Food"]}/>
+            <AttributeValues form={form} defaultValues={["Food"]} />
           </fieldset>
           <FormField
             control={form.control}
@@ -269,7 +299,7 @@ const Home = () => {
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel>I have variable for this product</FormLabel>
+                  <FormLabel>I have variation for this product</FormLabel>
                 </div>
                 <FormMessage />
               </FormItem>
@@ -279,142 +309,46 @@ const Home = () => {
           <div className="space-y-4">
             {variations.length
               ? variations?.map((variation, index: number) => {
-                return (
-                  <fieldset
-                    key={index}
-                    className="border bg-muted p-4 space-y-4"
-                  >
-                    <FormField
-                      control={form.control}
-                      // @ts-ignore
-                      name={`variations[${index}].image`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Product Image</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Image"
-                              // @ts-ignore
-                              value={form.getValues(
-                                // @ts-ignore
-                                `variations[${index}].image`
-                              )}
-                              onChange={(e: any) => {
-                                form.setValue(
-                                  // @ts-ignore
-                                  `variations[${index}].image`,
-                                  e.target.value
-                                );
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      // @ts-ignore
-                      name={`variations[${index}].price`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Image"
-                              type="number"
-                              // @ts-ignore
-                              value={form.getValues(
-                                // @ts-ignore
-                                `variations[${index}].price`
-                              )}
-                              onChange={(e: any) => {
-                                form.setValue(
-                                  // @ts-ignore
-                                  `variations[${index}].price`,
-                                  parseInt(e.target.value)
-                                );
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      // @ts-ignore
-                      name={`variations[${index}].discount.discountType`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Discount Type</FormLabel>
-                          <Select
-                            onValueChange={(value: any) => {
-                              form.setValue(
-                                // @ts-ignore
-                                `variations[${index}].discount.discountType`,
-                                value
-                              );
-                            }}
-                            // @ts-ignore
-                            defaultValue={form.getValues(
-                              // @ts-ignore
-                              `variations[${index}].discount.discountType`
-                            )}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="percentage">
-                                Percentage
-                              </SelectItem>
-                              <SelectItem value="fixed">Fixed</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      // @ts-ignore
-                      name={`variations[${index}].discount.value`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Image"
-                              type="number"
-                              // @ts-ignore
-                              value={form.getValues(
-                                // @ts-ignore
-                                `variations[${index}].discount.value`
-                              )}
-                              onChange={(e: any) => {
-                                form.setValue(
-                                  // @ts-ignore
-                                  `variations[${index}].discount.value`,
-                                  parseInt(e.target.value)
-                                );
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {/* <div className="space-y-4 bg-white shadow-md p-4">
+                  return (
+                    <fieldset
+                      key={index}
+                      className="border bg-muted p-4 space-y-4"
+                    >
                       <FormField
                         control={form.control}
                         // @ts-ignore
-                        name={`variations[${index}].attribute.label`}
+                        name={`variations[${index}].image`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Attribute label</FormLabel>
+                            <FormLabel>Product Image</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Image"
+                                // @ts-ignore
+                                value={form.getValues(
+                                  // @ts-ignore
+                                  `variations[${index}].image`
+                                )}
+                                onChange={(e: any) => {
+                                  form.setValue(
+                                    // @ts-ignore
+                                    `variations[${index}].image`,
+                                    e.target.value
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].price`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Price</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Image"
@@ -422,13 +356,13 @@ const Home = () => {
                                 // @ts-ignore
                                 value={form.getValues(
                                   // @ts-ignore
-                                  `variations[${index}].attribute.label`
+                                  `variations[${index}].price`
                                 )}
                                 onChange={(e: any) => {
                                   form.setValue(
                                     // @ts-ignore
-                                    `variations[${index}].attribute.label`,
-                                    e.target.value
+                                    `variations[${index}].price`,
+                                    parseInt(e.target.value)
                                   );
                                 }}
                               />
@@ -437,27 +371,64 @@ const Home = () => {
                           </FormItem>
                         )}
                       />
-
                       <FormField
                         control={form.control}
                         // @ts-ignore
-                        name={`variations[${index}].attribute.type`}
+                        name={`variations[${index}].discount.discountType`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Attribute Types</FormLabel>
+                            <FormLabel>Discount Type</FormLabel>
+                            <Select
+                              onValueChange={(value: any) => {
+                                form.setValue(
+                                  // @ts-ignore
+                                  `variations[${index}].discount.discountType`,
+                                  value
+                                );
+                              }}
+                              // @ts-ignore
+                              defaultValue={form.getValues(
+                                // @ts-ignore
+                                `variations[${index}].discount.discountType`
+                              )}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="percentage">
+                                  Percentage
+                                </SelectItem>
+                                <SelectItem value="fixed">Fixed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].discount.value`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Discount Value</FormLabel>
                             <FormControl>
                               <Input
-                                // placeholder="Image"
+                                placeholder="Image"
+                                type="number"
                                 // @ts-ignore
                                 value={form.getValues(
                                   // @ts-ignore
-                                  `variations[${index}].attribute.type`
+                                  `variations[${index}].discount.value`
                                 )}
                                 onChange={(e: any) => {
                                   form.setValue(
                                     // @ts-ignore
-                                    `variations[${index}].attribute.type`,
-                                    e.target.value
+                                    `variations[${index}].discount.value`,
+                                    parseInt(e.target.value)
                                   );
                                 }}
                               />
@@ -466,61 +437,25 @@ const Home = () => {
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        // @ts-ignore
-                        name={`variations[${index}].attribute.values`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Attribute Values</FormLabel>
-                            <FormControl>
-                              <Input
-                                // @ts-ignore
-                                value={form
-                                  .getValues(
-                                    // @ts-ignore
-                                    `variations[${index}].attribute.values`
-                                  )
-                                  ?.toString()}
-                                onChange={(e: any) => {
-                                  let attributeValues =
-                                    e.target.value.split(",");
-                                  if (attributeValues) {
-                                    attributeValues = attributeValues.map(
-                                      (value: string) => value.trim()
-                                    );
-                                  }
-                                  form.setValue(
-                                    // @ts-ignore
-                                    `variations[${index}].attribute.values`,
-                                    attributeValues
-                                  );
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div> */}
-                    <div
-                      onClick={() => {
-                        const prevValues = form.getValues("variations");
-                        const toSet = prevValues.filter(
-                          (value: any, i: number) => i !== index
-                        );
-                        // console.log(prevValues, toSet);
-                        // @ts-ignore
-                        form.setValue("variations", toSet);
-                        // @ts-ignore
-                        setVariations(toSet);
-                      }}
-                    >
-                      Remove
-                    </div>
-                  </fieldset>
-                );
-              })
+                      <AttributesArray form={form} variationIndex={index} />
+                      <div
+                        onClick={() => {
+                          const prevValues = form.getValues("variations");
+                          const toSet = prevValues.filter(
+                            (value: any, i: number) => i !== index
+                          );
+                          // console.log(prevValues, toSet);
+                          // @ts-ignore
+                          form.setValue("variations", toSet);
+                          // @ts-ignore
+                          setVariations(toSet);
+                        }}
+                      >
+                        Remove
+                      </div>
+                    </fieldset>
+                  );
+                })
               : null}
             {variations.length ? (
               <div
