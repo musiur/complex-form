@@ -194,39 +194,53 @@ const BundlePriceList = ({ form }: { form: any }) => {
                   />
                 </td>
                 <td>
-                  {index !== 0 ? <X className="stroke-pink-600" /> : null}
+                  {index !== 0 ? (
+                    <X
+                      className="stroke-pink-600"
+                      role="button"
+                      onClick={() => {
+                        setPriceList(
+                          priceList.filter(
+                            (item, filterIndex: number) => filterIndex !== index
+                          )
+                        );
+                      }}
+                    />
+                  ) : null}
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      <div className="w-full flex justify-end">
-        <div
-          className="p-2 border bg-white hover:bg-gray-200 active:bg-gray-300 rounded-md"
-          role="button"
-          onClick={() => {
-            if (priceList.length < 4) {
-              const lastPrice = priceList[priceList.length - 1];
-              const newPriceItem = {
-                min_quantity: lastPrice.max_quantity + 1,
-                max_quantity:
-                  lastPrice.max_quantity +
-                  1 +
-                  (lastPrice.max_quantity - lastPrice.min_quantity),
-                price:
-                  calculationType === "fixed"
-                    ? lastPrice.price - reducingAmount
-                    : lastPrice.price -
-                      lastPrice.price * (reducingAmount / 100),
-              };
-              setPriceList([...priceList, newPriceItem]);
-            }
-          }}
-        >
-          Add
+      {priceList.length < 4 ? (
+        <div className="w-full flex justify-end">
+          <div
+            className="p-2 border bg-white hover:bg-gray-200 active:bg-gray-300 rounded-md"
+            role="button"
+            onClick={() => {
+              if (priceList.length < 4) {
+                const lastPrice = priceList[priceList.length - 1];
+                const newPriceItem = {
+                  min_quantity: lastPrice.max_quantity + 1,
+                  max_quantity:
+                    lastPrice.max_quantity +
+                    1 +
+                    (lastPrice.max_quantity - lastPrice.min_quantity),
+                  price:
+                    calculationType === "fixed"
+                      ? lastPrice.price - reducingAmount
+                      : lastPrice.price -
+                        lastPrice.price * (reducingAmount / 100),
+                };
+                setPriceList([...priceList, newPriceItem]);
+              }
+            }}
+          >
+            Add
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 };
