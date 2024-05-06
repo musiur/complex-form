@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,15 +14,21 @@ import { X } from "lucide-react";
 const AttributeValues = ({
   form,
   defaultValues,
+  attributeIndex,
+  handler,
 }: {
   form: any;
-  defaultValues: string[];
+  defaultValues?: string[];
+  attributeIndex: number;
+  handler: Function;
 }) => {
   const [values, setValues] = useState<string[]>(defaultValues || []);
   const [inputValue, setInputValue] = useState("");
 
+  const valueName = `attributes[${attributeIndex}].values`;
+
   useEffect(() => {
-    form.setValue("attributes.values", values);
+    handler(values);
   }, [values]);
 
   const SetValue = () => {
@@ -35,11 +42,11 @@ const AttributeValues = ({
     <FormField
       control={form.control}
       // @ts-ignore
-      name={`attributes.values`}
+      name={valueName}
       render={({ field }) => (
         <FormItem>
           <FormLabel>Attribute Values</FormLabel>
-          <div className="flex flex-wrap flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {values.map((item: string) => {
               return (
                 <div
@@ -67,7 +74,8 @@ const AttributeValues = ({
                 value={inputValue}
                 onChange={(e: any) => {
                   const onChangeValue = e.target.value;
-                  onChangeValue[onChangeValue.length - 1] === " "
+                  onChangeValue[onChangeValue.length - 1] === " " ||
+                  onChangeValue[onChangeValue.length - 1] === ","
                     ? SetValue()
                     : setInputValue(onChangeValue);
                 }}

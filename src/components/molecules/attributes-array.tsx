@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import {
   FormControl,
@@ -7,76 +8,96 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import AttributeValues from "./attributes-values";
 import { X } from "lucide-react";
-type TAttribute = { label: string; value: string };
+
+type TAttribute = { label: string; type: string; values: string[] };
+
 const AttributesArray = ({
   form,
-  variationIndex,
+  defaultValues,
 }: {
   form: any;
-  variationIndex: number;
+  defaultValues?: TAttribute[];
 }) => {
-  const [attributes, setAttributes] = useState<TAttribute[]>([]);
+  const [attributes, setAttributes] = useState<TAttribute[]>(
+    defaultValues || []
+  );
+  const [showAddButton, setShowAddButton] = useState(false);
 
   useEffect(() => {
-    form.setValue(`variations[${variationIndex}].attributes`, attributes);
+    form.setValue(`attributes`, attributes);
   }, [attributes]);
 
-  console.log(attributes);
+  // console.log(attributes);
+
+  useEffect(() => {
+    const lastAttribute = attributes[attributes.length - 1];
+    if (
+      lastAttribute.label &&
+      lastAttribute.type &&
+      lastAttribute.values.length
+    ) {
+      setShowAddButton(true);
+    } else {
+      setShowAddButton(false);
+    }
+  }, [attributes]);
 
   return (
     <div className="space-y-4">
       <div className="space-y-4">
         {attributes.length
           ? attributes.map((attribute: TAttribute, index: number) => {
-              const dotNotation = `variations[${variationIndex}].attributes[${index}]`;
+              const dotNotation = `attributes[${index}]`;
               const labelName = dotNotation + ".label";
-              const valueName = dotNotation + ".value";
+              const typeName = dotNotation + ".type";
 
               return (
-                <div
+                <fieldset
                   key={index}
-                  className="space-y-4 p-4 rounded-md border bg-red-100 relative"
+                  className="space-y-4 p-4 border shadow-lg rounded-lg relative group"
                 >
-                  <div
-                    className="absolute top-[4px] right-[4px] p-[4px] rounded-full border border-pink-600"
-                    role="button"
-                    onClick={() => {
-                      console.log(attribute);
-                      const filteredAttributes = attributes.filter(
-                        (attr: any) => attr.label !== attribute.label
-                      );
-                      console.log(filteredAttributes);
-                      setAttributes(filteredAttributes);
-                    }}
-                  >
-                    <X className="w-4 h-4 stroke-pink-600" />
-                  </div>
+                  {attributes.length > 1 ? (
+                    <div className="absolute top-[4px] right-[4px] p-[4px] border cursor-pointer ml-[4px] rounded-full group-hover:border-pink-600 group-hover:bg-pink-600 transition-all duration-200">
+                      <X
+                        className="w-4 h-4 group-hover:stroke-white transition-all duration-200"
+                        onClick={() => {
+                          setAttributes(
+                            attributes.filter(
+                              (currentAttribute: TAttribute) =>
+                                currentAttribute.label !== attribute.label
+                            )
+                          );
+                        }}
+                      />
+                    </div>
+                  ) : null}
                   <FormField
                     control={form.control}
                     // @ts-ignore
                     name={labelName}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Attribute Label</FormLabel>
+                        <FormLabel>Attribute label</FormLabel>
                         <FormControl>
                           <Input
+                            placeholder="Image"
+                            // @ts-ignore
                             value={attributes[index].label}
-                            onChange={(e) => {
+                            onChange={(e: any) => {
                               setAttributes(
                                 attributes.map(
-                                  (
-                                    prevAttribute: TAttribute,
-                                    attrIndex: number
-                                  ) => {
-                                    if (attrIndex === index) {
+                                  (currentAttribute: TAttribute) => {
+                                    if (
+                                      currentAttribute.label === attribute.label
+                                    ) {
                                       return {
-                                        ...prevAttribute,
+                                        ...currentAttribute,
                                         label: e.target.value,
                                       };
-                                    } else {
-                                      return prevAttribute;
                                     }
+                                    return currentAttribute;
                                   }
                                 )
                               );
@@ -87,31 +108,32 @@ const AttributesArray = ({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     // @ts-ignore
-                    name={valueName}
+                    name={typeName}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Attribute Value</FormLabel>
+                        <FormLabel>Attribute Types</FormLabel>
                         <FormControl>
                           <Input
-                          value={attributes[index].value}
-                            onChange={(e) => {
+                            // placeholder="Image"
+                            // @ts-ignore
+                            value={attributes[index].type}
+                            onChange={(e: any) => {
                               setAttributes(
                                 attributes.map(
-                                  (
-                                    prevAttribute: TAttribute,
-                                    attrIndex: number
-                                  ) => {
-                                    if (attrIndex === index) {
+                                  (currentAttribute: TAttribute) => {
+                                    if (
+                                      currentAttribute.label === attribute.label
+                                    ) {
                                       return {
-                                        ...prevAttribute,
-                                        value: e.target.value,
+                                        ...currentAttribute,
+                                        type: e.target.value,
                                       };
-                                    } else {
-                                      return prevAttribute;
                                     }
+                                    return currentAttribute;
                                   }
                                 )
                               );
@@ -122,20 +144,47 @@ const AttributesArray = ({
                       </FormItem>
                     )}
                   />
-                </div>
+                  <AttributeValues
+                    form={form}
+                    attributeIndex={index}
+                    defaultValues={attributes[index].values}
+                    handler={(values: string[]) => {
+                      setAttributes(
+                        attributes.map((currentAttribute: TAttribute) => {
+                          if (currentAttribute.label === attribute.label) {
+                            return {
+                              ...currentAttribute,
+                              values,
+                            };
+                          }
+                          return currentAttribute;
+                        })
+                      );
+                    }}
+                  />
+                </fieldset>
               );
             })
           : null}
       </div>
-      <div
-        onClick={() => {
-          setAttributes([...attributes, { label: "", value: "" }]);
-        }}
-        className="h-12 flex items-center justify-center w-[200px] border bg-gray-200 hover:bg-gray-600 bg-white active:bg-gray-400 rounded-md hover:text-white"
-        role="button"
-      >
-        Add A New Attribute
-      </div>
+      {showAddButton ? (
+        <div
+          onClick={() => {
+            setAttributes([
+              ...attributes,
+              {
+                label: "",
+                type: "",
+                values: [],
+              },
+            ]);
+          }}
+          className="h-12 flex items-center justify-center w-[200px] border bg-gray-200 hover:bg-gray-600 active:bg-gray-400 rounded-md hover:text-white"
+          role="button"
+        >
+          Add A New Attribute
+        </div>
+      ) : null}
     </div>
   );
 };

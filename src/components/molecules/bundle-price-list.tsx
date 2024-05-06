@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FormControl,
   FormField,
@@ -13,7 +14,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -24,12 +24,17 @@ type PriceListItem = {
   price: number;
 };
 
-const BundlePriceList = ({ form }: { form: any }) => {
-  const [priceList, setPriceList] = useState<PriceListItem[]>([
-    { min_quantity: 1, max_quantity: 10, price: 100 },
-  ]);
+const BundlePriceList = ({ form, name }: { form: any; name: string }) => {
+  const [priceList, setPriceList] = useState<PriceListItem[]>(
+    form.getValues(name) || [{ min_quantity: 1, max_quantity: 10, price: 100 }]
+  );
   const [calculationType, setCalculationType] = useState("fixed");
   const [reducingAmount, setReducingAmount] = useState(10);
+
+  useEffect(() => {
+    form.setValue(name, priceList);
+  }, [priceList]);
+  
   return (
     <div className="bg-blue-100 p-4 rounded-md space-y-4">
       <FormLabel>Price reduce level as quantity increase</FormLabel>
@@ -52,17 +57,22 @@ const BundlePriceList = ({ form }: { form: any }) => {
         </div>
         <div>
           <Input
+            type="number"
             value={reducingAmount}
+            max={priceList[priceList.length - 1].price}
             onChange={(e) => {
               if (e.target.value) {
                 // @ts-ignore
-                setReducingAmount(e.target.value);
+                setReducingAmount(parseInt(e.target.value));
               }
             }}
           />
         </div>
       </div>
-      <table className="border [&>*]:text-center bg-white rounded-md">
+      <table
+        className="border [&>*]:text-center bg-white"
+        style={{ borderRadius: "10px" }}
+      >
         <thead>
           <tr className="border-b">
             <th className="p-2 font-medium text-xs">Min Quantity</th>
@@ -73,7 +83,7 @@ const BundlePriceList = ({ form }: { form: any }) => {
         </thead>
         <tbody>
           {priceList.map((price: PriceListItem, index: number) => {
-            const dotNotation = `boundle_price_list[${index}]`;
+            const dotNotation = `bundle_price_list[${index}]`;
             const minName = dotNotation + ".min_quantity";
             const maxName = dotNotation + ".max_quantity";
             const priceName = dotNotation + ".price";
@@ -88,9 +98,9 @@ const BundlePriceList = ({ form }: { form: any }) => {
                       <FormItem>
                         <FormControl>
                           <Input
-                            placeholder="Image"
                             type="number"
                             value={priceList[index].min_quantity}
+                            max={priceList[index].max_quantity - 1}
                             onChange={(e: any) => {
                               setPriceList(
                                 priceList.map(
@@ -126,9 +136,9 @@ const BundlePriceList = ({ form }: { form: any }) => {
                       <FormItem>
                         <FormControl>
                           <Input
-                            placeholder="Image"
                             type="number"
                             value={priceList[index].max_quantity}
+                            min={priceList[index].min_quantity + 1}
                             onChange={(e: any) => {
                               setPriceList(
                                 priceList.map(
@@ -164,7 +174,6 @@ const BundlePriceList = ({ form }: { form: any }) => {
                       <FormItem>
                         <FormControl>
                           <Input
-                            placeholder="Image"
                             type="number"
                             value={priceList[index].price}
                             onChange={(e: any) => {
@@ -221,19 +230,26 @@ const BundlePriceList = ({ form }: { form: any }) => {
             onClick={() => {
               if (priceList.length < 4) {
                 const lastPrice = priceList[priceList.length - 1];
-                const newPriceItem = {
-                  min_quantity: lastPrice.max_quantity + 1,
-                  max_quantity:
-                    lastPrice.max_quantity +
-                    1 +
-                    (lastPrice.max_quantity - lastPrice.min_quantity),
-                  price:
-                    calculationType === "fixed"
-                      ? lastPrice.price - reducingAmount
-                      : lastPrice.price -
-                        lastPrice.price * (reducingAmount / 100),
-                };
-                setPriceList([...priceList, newPriceItem]);
+                if (
+                  lastPrice.max_quantity &&
+                  lastPrice.min_quantity &&
+                  lastPrice.price
+                ) {
+                  const newPriceItem = {
+                    min_quantity: lastPrice.max_quantity + 1,
+                    max_quantity:
+                      lastPrice.max_quantity +
+                      1 +
+                      (lastPrice.max_quantity - lastPrice.min_quantity),
+                    price: Math.floor(
+                      calculationType === "fixed"
+                        ? lastPrice.price - reducingAmount
+                        : lastPrice.price -
+                            lastPrice.price * (reducingAmount / 100)
+                    ),
+                  };
+                  setPriceList([...priceList, newPriceItem]);
+                }
               }
             }}
           >
