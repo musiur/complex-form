@@ -95,7 +95,7 @@ const ChooseCombination = ({
           <SelectContent>
             {combinations.map((combination, index: number) => {
               const { label, value } = combination;
-              console.log(combination, "<--");
+              // console.log(combination, "<--");
               return (
                 <SelectItem key={index} value={value}>
                   {label}
