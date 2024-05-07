@@ -6,7 +6,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -18,13 +17,19 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
+import { useEffect, useState } from "react";
 
 const Discount = ({ form, name }: { form: any; name: string }) => {
+  const [value, setValue] = useState(form.getValues(name + ".value") || 0);
   const typeName = name + ".discountType";
   const valueName = name + ".value";
 
+  useEffect(() => {
+    form.setValue(valueName, value);
+  }, [value]);
+
   return (
-    <fieldset className="p-4 border rounded-md shadow-lg">
+    <fieldset className="p-4 border rounded-md shadow-lg bg-white space-y-4">
       <FormField
         control={form.control}
         // @ts-ignore
@@ -35,7 +40,7 @@ const Discount = ({ form, name }: { form: any; name: string }) => {
             <FormControl>
               <Select
                 onValueChange={(value) => form.setValue(typeName, value)}
-                defaultValue={typeName}
+                defaultValue={form.getValues(typeName)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -62,17 +67,9 @@ const Discount = ({ form, name }: { form: any; name: string }) => {
             <FormControl>
               <Input
                 type="number"
-                // @ts-ignore
-                value={form.getValues(
-                  // @ts-ignore
-                  valueName
-                )}
+                value={value}
                 onChange={(e: any) => {
-                  form.setValue(
-                    // @ts-ignore
-                    valueName,
-                    parseInt(e.target.value)
-                  );
+                  setValue(parseInt(e.target.value));
                 }}
               />
             </FormControl>

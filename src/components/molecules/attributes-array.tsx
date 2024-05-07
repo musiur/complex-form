@@ -82,7 +82,6 @@ const AttributesArray = ({
                         <FormLabel>Attribute label</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Image"
                             // @ts-ignore
                             value={attributes[index].label}
                             onChange={(e: any) => {
@@ -92,10 +91,16 @@ const AttributesArray = ({
                                     if (
                                       currentAttribute.label === attribute.label
                                     ) {
-                                      return {
-                                        ...currentAttribute,
-                                        label: e.target.value,
-                                      };
+                                      const existsAlready = attributes.find(
+                                        (tempAttribute: TAttribute) =>
+                                          tempAttribute.label === e.target.value
+                                      );
+                                      if (!existsAlready) {
+                                        return {
+                                          ...currentAttribute,
+                                          label: e.target.value,
+                                        };
+                                      }
                                     }
                                     return currentAttribute;
                                   }
@@ -118,7 +123,6 @@ const AttributesArray = ({
                         <FormLabel>Attribute Types</FormLabel>
                         <FormControl>
                           <Input
-                            // placeholder="Image"
                             // @ts-ignore
                             value={attributes[index].type}
                             onChange={(e: any) => {

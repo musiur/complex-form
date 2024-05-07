@@ -18,6 +18,10 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
+import { generateCombinations } from "@/lib/utils";
+import ChooseCombination from "./choose-combination";
+import Discount from "./discount";
+import BundlePriceList from "./bundle-price-list";
 
 const VariationsArray = ({
   defaultValues,
@@ -50,29 +54,36 @@ const VariationsArray = ({
 
   return (
     <>
-      <FormField
-        control={form.control}
-        name="haveVariations"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormLabel>I have variation for this product</FormLabel>
-            </div>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {form.watch("attributes")[0].values.length ? (
+        <FormField
+          control={form.control}
+          name="haveVariations"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>I have variation for this product</FormLabel>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : null}
       <div className="space-y-4">
         {variations.length
           ? variations?.map((variation: any, index: number) => {
               return (
                 <fieldset key={index} className="border bg-muted p-4 space-y-4">
+                  <div>
+                    {form.watch("attributes")[0].values.length ? (
+                      <ChooseCombination form={form} variantIndex={index} />
+                    ) : null}
+                  </div>
                   <FormField
                     control={form.control}
                     // @ts-ignore
@@ -109,16 +120,16 @@ const VariationsArray = ({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     // @ts-ignore
-                    name={`variations[${index}].image`}
+                    name={`variations[${index}].price`}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Price</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Image"
                             type="number"
                             // @ts-ignore
                             value={variations[index].price}
@@ -146,7 +157,17 @@ const VariationsArray = ({
                       </FormItem>
                     )}
                   />
-                  <FormField
+
+                  <BundlePriceList
+                    form={form}
+                    name={`variations[${index}].bundle_price_list`}
+                  />
+
+                  <Discount
+                    form={form}
+                    name={`variations[${index}].discount`}
+                  />
+                  {/* <FormField
                     control={form.control}
                     // @ts-ignore
                     name={`variations[${index}].discount.discountType`}
@@ -166,11 +187,6 @@ const VariationsArray = ({
                                 }
                               )
                             );
-                            //   form.setValue(
-                            //     // @ts-ignore
-                            //     `variations[${index}].discount.discountType`,
-                            //     value
-                            //   );
                           }}
                           // @ts-ignore
                           defaultValue={variations[index].discount.discountType}
@@ -226,7 +242,7 @@ const VariationsArray = ({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                   <div
                     onClick={() => {
                       setVariations(
@@ -263,14 +279,20 @@ export default VariationsArray;
 
 const variationTemplate = [
   {
-    image: "",
+    image: "image url",
     price: 0,
     discount: {
       discountType: "fixed",
       value: 0,
     },
     attributes: [],
-    bundle_price_list: [],
+    bundle_price_list: [
+      {
+        min_quantity: 1,
+        max_quantity: 10,
+        price: 100,
+      },
+    ],
     stock: 1,
   },
 ];
