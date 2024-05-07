@@ -82,11 +82,17 @@ const AttributeValues = ({
                 value={inputValue}
                 onChange={(e: any) => {
                   const onChangeValue = e.target.value;
-                  onChangeValue[onChangeValue.length - 1] === " " ||
-                  onChangeValue[onChangeValue.length - 1] === "." ||
-                  onChangeValue[onChangeValue.length - 1] === ","
-                    ? SetValue()
-                    : setInputValue(onChangeValue);
+                  const lastChar = onChangeValue[onChangeValue.length - 1];
+
+                  if (lastChar !== "-") {
+                    lastChar === " " || lastChar === "." || lastChar === ","
+                      ? SetValue()
+                      : setInputValue(
+                          onChangeValue
+                            .replaceAll(" ", "_")
+                            .replaceAll("-", "_")
+                        );
+                  }
                 }}
                 className="h-[40px] px-4 rounded-md border w-full"
               />

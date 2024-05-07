@@ -67,7 +67,7 @@ const TVariation = z.object({
   discount: TDiscount,
   attributes: z.string().min(1),
   stock: z.number().min(1),
-  bulkprice_same_as_base: z.boolean().default(true),
+  // bulkprice_same_as_base: z.boolean().default(true),
 });
 
 const schema = z.object({
@@ -90,6 +90,7 @@ const schema = z.object({
   attributes: z.array(TAttributeItem),
   variations: z.array(TVariation),
   discount: TDiscount,
+  samePriceForAll: z.boolean().default(true),
 
   // stock: z.number().min(1),
   // tags: z.array(z.string()),
@@ -142,9 +143,29 @@ const Home = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-8 border p-4 shadow-2xl"
         >
-          <Discount form={form} name="discount" />
+          <FormField
+            control={form.control}
+            name="samePriceForAll"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center gap-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>All products has some price</FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {form.watch("samePriceForAll") ? (
+            <BundlePriceList form={form} name="bundle_price_list" />
+          ) : null}
 
-          <BundlePriceList form={form} name="bundle_price_list" />
+          <Discount form={form} name="discount" />
 
           <AttributesArray
             form={form}

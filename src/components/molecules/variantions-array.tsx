@@ -127,12 +127,6 @@ const VariationsArray = ({
                                         )
                                       );
                                     }
-                                    // const filteredCombinations = combinations.filter(
-                                    //   (combination: { label: string; value: string }) =>
-                                    //     !usedCombinations.includes(combination.value)
-                                    // );
-                                    // console.log(filteredCombinations, "<-");
-                                    // setCombinations(filteredCombinations);
                                   }
                                 }}
                                 value={variations[index]?.attributes || ""}
@@ -239,44 +233,49 @@ const VariationsArray = ({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name={`variations[${index}].bulkprice_same_as_base`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center gap-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={variations[index].bulkprice_same_as_base}
-                              onCheckedChange={(value) => {
-                                setVariations(
-                                  variations.map(
-                                    (
-                                      currentVariant: any,
-                                      variantIndex: number
-                                    ) => {
-                                      if (variantIndex === index) {
-                                        return {
-                                          ...currentVariant,
-                                          bulkprice_same_as_base: value,
-                                        };
+                  {/* {!form.watch("samePriceForAll") ? (
+                    <FormField
+                      control={form.control}
+                      name={`variations[${index}].bulkprice_same_as_base`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center gap-2">
+                            <FormControl>
+                              <Checkbox
+                                checked={
+                                  variations[index].bulkprice_same_as_base
+                                }
+                                onCheckedChange={(value) => {
+                                  setVariations(
+                                    variations.map(
+                                      (
+                                        currentVariant: any,
+                                        variantIndex: number
+                                      ) => {
+                                        if (variantIndex === index) {
+                                          return {
+                                            ...currentVariant,
+                                            bulkprice_same_as_base: value,
+                                          };
+                                        }
+                                        return currentVariant;
                                       }
-                                      return currentVariant;
-                                    }
-                                  )
-                                );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel>
-                            Bulk prices are same as BASE bulk prices
-                          </FormLabel>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  {!variations[index].bulkprice_same_as_base ? (
+                                    )
+                                  );
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel>
+                              Bulk prices are same as BASE bulk prices
+                            </FormLabel>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ) : null} */}
+                  {/* !variations[index].bulkprice_same_as_base || */}
+                  {!form.watch("samePriceForAll") ? (
                     <BundlePriceList
                       form={form}
                       name={`variations[${index}].bundle_price_list`}
@@ -343,6 +342,6 @@ const variationTemplate = [
       },
     ],
     stock: 1,
-    bulkprice_same_as_base: true,
+    // bulkprice_same_as_base: true,
   },
 ];
