@@ -65,8 +65,9 @@ const TVariation = z.object({
   image: z.string().min(1),
   price: z.number().min(0),
   discount: TDiscount,
-  attributes: z.array(TAttribute).min(1),
+  attributes: z.string().min(1),
   stock: z.number().min(1),
+  bulkprice_same_as_base: z.boolean().default(true),
 });
 
 const schema = z.object({

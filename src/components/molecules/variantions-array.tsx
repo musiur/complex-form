@@ -13,13 +13,13 @@ import { Input } from "../ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 import { generateCombinations } from "@/lib/utils";
-import ChooseCombination from "./choose-combination";
 import Discount from "./discount";
 import BundlePriceList from "./bundle-price-list";
 
@@ -33,6 +33,16 @@ const VariationsArray = ({
   form: any;
 }) => {
   const [variations, setVariations] = useState(defaultValues || []);
+  const [combinations, setCombinations] = useState<any>([]);
+
+  useEffect(() => {
+    if (form.watch("attributes")?.length) {
+      const generatedCombinations = generateCombinations(
+        form.watch("attributes")
+      );
+      setCombinations(generatedCombinations);
+    }
+  }, [form.watch("attributes")]);
 
   useEffect(() => {
     handler(variations);
@@ -81,7 +91,78 @@ const VariationsArray = ({
                 <fieldset key={index} className="border bg-muted p-4 space-y-4">
                   <div>
                     {form.watch("attributes")[0].values.length ? (
-                      <ChooseCombination form={form} variantIndex={index} />
+                      <FormField
+                        control={form.control}
+                        // @ts-ignore
+                        name={`variations[${index}].attributes`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Attributes</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={(value) => {
+                                  if (
+                                    variations.length &&
+                                    combinations.length
+                                  ) {
+                                    const usedCombinations = variations.map(
+                                      (variation: { attributes: string }) =>
+                                        variation.attributes
+                                    );
+                                    if (!usedCombinations?.includes(value)) {
+                                      setVariations(
+                                        variations.map(
+                                          (
+                                            currentVariant: any,
+                                            variantIndex: number
+                                          ) => {
+                                            if (variantIndex === index) {
+                                              return {
+                                                ...currentVariant,
+                                                attributes: value,
+                                              };
+                                            }
+                                            return currentVariant;
+                                          }
+                                        )
+                                      );
+                                    }
+                                    // const filteredCombinations = combinations.filter(
+                                    //   (combination: { label: string; value: string }) =>
+                                    //     !usedCombinations.includes(combination.value)
+                                    // );
+                                    // console.log(filteredCombinations, "<-");
+                                    // setCombinations(filteredCombinations);
+                                  }
+                                }}
+                                value={variations[index]?.attributes || ""}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {combinations?.map(
+                                      (combination: {
+                                        label: string;
+                                        value: string;
+                                      }) => {
+                                        const { label, value } = combination;
+                                        return (
+                                          <SelectItem key={value} value={value}>
+                                            {label}
+                                          </SelectItem>
+                                        );
+                                      }
+                                    )}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     ) : null}
                   </div>
                   <FormField
@@ -158,91 +239,55 @@ const VariationsArray = ({
                     )}
                   />
 
-                  <BundlePriceList
-                    form={form}
-                    name={`variations[${index}].bundle_price_list`}
+                  <FormField
+                    control={form.control}
+                    name={`variations[${index}].bulkprice_same_as_base`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={variations[index].bulkprice_same_as_base}
+                              onCheckedChange={(value) => {
+                                setVariations(
+                                  variations.map(
+                                    (
+                                      currentVariant: any,
+                                      variantIndex: number
+                                    ) => {
+                                      if (variantIndex === index) {
+                                        return {
+                                          ...currentVariant,
+                                          bulkprice_same_as_base: value,
+                                        };
+                                      }
+                                      return currentVariant;
+                                    }
+                                  )
+                                );
+                              }}
+                            />
+                          </FormControl>
+                          <FormLabel>
+                            Bulk prices are same as BASE bulk prices
+                          </FormLabel>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
+                  {!variations[index].bulkprice_same_as_base ? (
+                    <BundlePriceList
+                      form={form}
+                      name={`variations[${index}].bundle_price_list`}
+                    />
+                  ) : null}
 
                   <Discount
                     form={form}
                     name={`variations[${index}].discount`}
                   />
-                  {/* <FormField
-                    control={form.control}
-                    // @ts-ignore
-                    name={`variations[${index}].discount.discountType`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Discount Type</FormLabel>
-                        <Select
-                          onValueChange={(value: any) => {
-                            setVariations(
-                              variations.map(
-                                (currentVariant: any, variantIndex: number) => {
-                                  if (variantIndex === index) {
-                                    currentVariant.discount.discountType =
-                                      value;
-                                  }
-                                  return currentVariant;
-                                }
-                              )
-                            );
-                          }}
-                          // @ts-ignore
-                          defaultValue={variations[index].discount.discountType}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="percentage">
-                              Percentage
-                            </SelectItem>
-                            <SelectItem value="fixed">Fixed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    // @ts-ignore
-                    name={`variations[${index}].discount.value`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Discount Value</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Image"
-                            type="number"
-                            // @ts-ignore
-                            value={variations[index].discount.value}
-                            onChange={(e: any) => {
-                              setVariations(
-                                variations.map(
-                                  (
-                                    currentVariant: any,
-                                    variantIndex: number
-                                  ) => {
-                                    if (variantIndex === index) {
-                                      currentVariant.discount.value = parseInt(
-                                        e.target.value
-                                      );
-                                    }
-                                    return currentVariant;
-                                  }
-                                )
-                              );
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  /> */}
+
                   <div
                     onClick={() => {
                       setVariations(
@@ -261,7 +306,11 @@ const VariationsArray = ({
               );
             })
           : null}
-        {variations.length ? (
+        {variations?.length &&
+        combinations?.length &&
+        variations?.map(
+          (variation: { attributes: string }) => variation.attributes
+        )?.length !== combinations?.length ? (
           <div
             onClick={() => setVariations([...variations, ...variationTemplate])}
             role="button"
@@ -285,7 +334,7 @@ const variationTemplate = [
       discountType: "fixed",
       value: 0,
     },
-    attributes: [],
+    attributes: "",
     bundle_price_list: [
       {
         min_quantity: 1,
@@ -294,5 +343,6 @@ const variationTemplate = [
       },
     ],
     stock: 1,
+    bulkprice_same_as_base: true,
   },
 ];

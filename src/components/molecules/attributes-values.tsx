@@ -33,6 +33,14 @@ const AttributeValues = ({
 
   const SetValue = () => {
     if (inputValue && !values.find((item: string) => item === inputValue)) {
+      const variations = form.watch("variations");
+      form.setValue(
+        "variations",
+        variations.map((variation: any) => {
+          return { ...variation, attributes: "" };
+        })
+      );
+
       setValues([...values, ...inputValue.trim().split(" ")]);
       setInputValue("");
     }
@@ -75,6 +83,7 @@ const AttributeValues = ({
                 onChange={(e: any) => {
                   const onChangeValue = e.target.value;
                   onChangeValue[onChangeValue.length - 1] === " " ||
+                  onChangeValue[onChangeValue.length - 1] === "." ||
                   onChangeValue[onChangeValue.length - 1] === ","
                     ? SetValue()
                     : setInputValue(onChangeValue);

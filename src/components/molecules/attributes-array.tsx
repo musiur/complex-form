@@ -174,6 +174,15 @@ const AttributesArray = ({
       {showAddButton ? (
         <div
           onClick={() => {
+            const variations = form.watch("variations");
+
+            form.setValue(
+              "variations",
+              variations.map((variation: any) => {
+                return { ...variation, attributes: "" };
+              })
+            );
+
             setAttributes([
               ...attributes,
               {
