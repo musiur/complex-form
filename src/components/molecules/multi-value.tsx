@@ -45,10 +45,10 @@ const MultiValue = ({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <div className="flex flex-wrap items-center gap-1">
-            {values.map((item: string) => {
+            {values.map((item: string, index: number) => {
               return (
                 <div
-                  key={item}
+                  key={index}
                   className="flex items-center gap-1 rounded border text-sm pl-2"
                 >
                   {item}

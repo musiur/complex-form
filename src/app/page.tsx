@@ -12,18 +12,21 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import AttributesArray from "@/components/molecules/attributes-array";
 import BundlePriceList from "@/components/molecules/bundle-price-list";
 import VariationsArray from "@/components/molecules/variantions-array";
 import Discount from "@/components/molecules/discount";
-import MultiValue from "@/components/molecules/multi-value";
 import InputX from "@/components/molecules/input-x";
-// import EditorX from "@/components/molecules/editor-x";
 
 import dynamic from "next/dynamic";
 import { generateAttributeLabels, parseCombination } from "@/lib/utils";
+import { CreateProduct } from "./actions";
+import MultiValue from "@/components/molecules/multi-value";
+import MultiSelect from "@/components/molecules/multi-select";
+import CategorySelect from "@/components/molecules/category-select";
 
 const EditorX = dynamic(() => import("@/components/molecules/editor-x"), {
   ssr: false,
@@ -33,11 +36,6 @@ const TAttributeItem = z.object({
   label: z.string().min(1),
   type: z.string().min(1),
   values: z.array(z.string().min(1)).min(1),
-});
-
-const TAttribute = z.object({
-  label: z.string().min(1),
-  value: z.string().min(1),
 });
 
 const TMetadata = z.object({
@@ -50,10 +48,6 @@ const TPriceListItem = z.object({
   max_quantity: z.number().min(2),
   price: z.number().min(1),
 });
-// .refine((value) => value.max_quantity > value.min_quantity, {
-//   message: "max_quantity must be greater than min_quantity",
-//   shouldFocus: true
-// });
 
 const TDiscount = z.object({
   discountType: z.string().or(z.literal("fixed")).or(z.literal("percentage")),
@@ -66,7 +60,6 @@ const TVariation = z.object({
   discount: TDiscount,
   attributes: z.string().min(1),
   stock: z.number().min(1),
-  // bulkprice_same_as_base: z.boolean().default(true),
 });
 
 const schema = z.object({
@@ -75,6 +68,9 @@ const schema = z.object({
   description: z.string().min(1),
   shortDescription: z.string().min(1),
   category: z.string().min(1),
+  subCategories: z
+    .array(z.object({ label: z.string(), value: z.string() }))
+    .optional(),
 
   price: z.number().min(1),
   priceType: z.string().min(1),
@@ -103,6 +99,11 @@ const Home = () => {
     defaultValues: apiDefaultValues,
   });
 
+  const PostCreateProduct = async (data: any) => {
+    const result = await CreateProduct(data);
+    console.log(result);
+  };
+
   function onSubmit(data: z.infer<typeof schema>) {
     const attributesLabels = generateAttributeLabels(data.attributes!);
     const allVariations = data?.variations?.map(
@@ -113,9 +114,16 @@ const Home = () => {
         };
       }
     );
+    const allSubCategories = data?.subCategories?.map(
+      (item: { label: string; value: string }) => item.value
+    );
     // @ts-ignore
     data.variations = allVariations;
+    // @ts-ignore
+    data.subCategories = allSubCategories;
+    PostCreateProduct(data);
     console.log(data);
+
     toast({
       title: "You submitted the following values:",
       description: (
@@ -125,7 +133,7 @@ const Home = () => {
       ),
     });
   }
-  console.log(form.formState.errors);
+  // console.log(form.formState.errors);
   return (
     <div className="max-w-[600px] mx-auto section">
       <Form {...form}>
@@ -141,7 +149,31 @@ const Home = () => {
             name="shortDescription"
             label="Short Description"
           />
-          <InputX form={form} name="category" label="Category" type="text" />
+          <div className="p-4 rounded-lg border space-y-4 bg-white">
+            <CategorySelect form={form} />
+            <FormField
+              control={form.control}
+              name="subCategories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sub Categories</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      form={form}
+                      name="subCategories"
+                      defaultValues={form.watch("subCategories")}
+                      options={[
+                        { label: "Shirt", value: "663162fc9375454f7bf13440" },
+                        { label: "Hello", value: "663162fc9375454f7bf13412" },
+                        { label: "Pant", value: "663162fc9375454f7bf13413" },
+                      ]}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <InputX form={form} name="price" label="Price" type="number" />
           <InputX form={form} name="priceType" label="Price Type" type="text" />
           <InputX
@@ -291,6 +323,7 @@ const apiDefaultValues = {
   description: "This is an example product.",
   shortDescription: "Short description for the product.",
   category: "663162fc9375454f7bf13440",
+  subCategories: [{ label: "Shirt", value: "663162fc9375454f7bf13440" }],
   price: 99.99,
   priceType: "sale",
   min_quantity: 10,
