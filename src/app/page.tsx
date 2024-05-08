@@ -179,7 +179,9 @@ const Home = () => {
             <BundlePriceList form={form} name="bundle_price_list" />
           ) : null}
 
-          <Discount form={form} name="discount" />
+          {form.watch("samePriceForAll") ? (
+            <Discount form={form} name="discount" />
+          ) : null}
 
           <AttributesArray
             form={form}

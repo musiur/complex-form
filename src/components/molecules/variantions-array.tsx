@@ -242,10 +242,12 @@ const VariationsArray = ({
                     />
                   ) : null}
 
-                  <Discount
-                    form={form}
-                    name={`variations[${index}].discount`}
-                  />
+                  {!form.watch("samePriceForAll") ? (
+                    <Discount
+                      form={form}
+                      name={`variations[${index}].discount`}
+                    />
+                  ) : null}
 
                   <InputX
                     form={form}
