@@ -115,6 +115,7 @@ const Home = () => {
     );
     // @ts-ignore
     data.variations = allVariations;
+    console.log(data);
     toast({
       title: "You submitted the following values:",
       description: (
