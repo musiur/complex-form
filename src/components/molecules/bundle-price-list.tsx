@@ -29,7 +29,7 @@ const BundlePriceList = ({ form, name }: { form: any; name: string }) => {
     form.getValues(name) || [{ min_quantity: 1, max_quantity: 10, price: 100 }]
   );
   const [calculationType, setCalculationType] = useState("fixed");
-  const [reducingAmount, setReducingAmount] = useState(10);
+  const [reducingAmount, setReducingAmount] = useState(1);
 
   useEffect(() => {
     form.setValue(name, priceList);
